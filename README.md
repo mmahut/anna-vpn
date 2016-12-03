@@ -3,5 +3,6 @@
 To install the demo of strongswan:
 
 ```
-curl https://raw.githubusercontent.com/mmahut/anna-vpn/master/strongswan.sh | sh
+wget https://raw.githubusercontent.com/mmahut/anna-vpn/master/strongswan.sh -O /root/install_strongswan.sh
+sh /root/install_strongswan.sh
 ````
