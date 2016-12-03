@@ -51,7 +51,7 @@ Complete!
 == Configure openswan on both client and server
 
 ```
-[root@server ~]# cat /etc/strongswan/ipsec.conf 
+[root@server ~]# cat > /etc/strongswan/ipsec.conf<<EOF
 config setup
 	charondebug="all"
 	uniqueids=yes
@@ -75,11 +75,13 @@ conn tunnel
 	keyexchange=ikev2
 	auto=start
 	type=tunnel
-[root@server ~]# cat /etc/strongswan/ipsec.secrets 
+EOF
+[root@server ~]# cat >/etc/strongswan/ipsec.secrets<<EOF
 139.59.155.23 138.68.106.147 : PSK 'sharedsecret'
+EOF
 [root@server ~]# 
 
-[root@client ~]# cat /etc/strongswan/ipsec.conf 
+[root@client ~]# cat >/etc/strongswan/ipsec.conf<<EOF
 config setup
 	charondebug="all"
 	uniqueids=yes
@@ -103,8 +105,10 @@ conn tunnel
 	keyexchange=ikev2
 	auto=start
 	type=tunnel
-[root@client ~]# cat /etc/strongswan/ipsec.secrets 
+EOF
+[root@client ~]# cat >/etc/strongswan/ipsec.secrets<<EOF
 139.59.155.23 138.68.106.147 : PSK 'sharedsecret'
+EOF
 [root@client ~]# 
 ```
 
