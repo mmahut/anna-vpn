@@ -1,3 +1,4 @@
+#!/bin/bash
 read -p "What is the client IP? " client_ip
 read -p "What is the server IP? " server_ip
 
