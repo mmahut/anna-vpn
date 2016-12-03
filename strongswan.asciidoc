@@ -50,6 +50,7 @@ Complete!
 
 == Configure openswan on both client and server
 
+```
 [root@server ~]# cat /etc/strongswan/ipsec.conf 
 config setup
 	charondebug="all"
@@ -105,6 +106,7 @@ conn tunnel
 [root@client ~]# cat /etc/strongswan/ipsec.secrets 
 139.59.155.23 138.68.106.147 : PSK 'sharedsecret'
 [root@client ~]# 
+```
 
 == Enable tunnel between the machines
 
