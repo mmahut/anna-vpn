@@ -1,0 +1,136 @@
+= Strongswan tunnel between two machines
+
+
+== Installing strongswan server
+
+Make sure you have EPEL enabled.
+
+```
+[root@server ~]# yum install strongswan -y
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: repo.de.bigstepcloud.com
+ * epel: mirror.imt-systems.com
+ * extras: mirror.de.leaseweb.net
+ * updates: repo.de.bigstepcloud.com
+Resolving Dependencies
+--> Running transaction check
+---> Package strongswan.x86_64 0:5.4.0-2.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+==============================================================================================================================================================================================
+ Package                                         Arch                                        Version                                          Repository                                 Size
+==============================================================================================================================================================================================
+Installing:
+ strongswan                                      x86_64                                      5.4.0-2.el7                                      epel                                      1.1 M
+
+Transaction Summary
+==============================================================================================================================================================================================
+Install  1 Package
+
+Total download size: 1.1 M
+Installed size: 3.0 M
+Downloading packages:
+strongswan-5.4.0-2.el7.x86_64.rpm                                                                                                                                      | 1.1 MB  00:00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : strongswan-5.4.0-2.el7.x86_64                                                                                                                                              1/1 
+  Verifying  : strongswan-5.4.0-2.el7.x86_64                                                                                                                                              1/1 
+
+Installed:
+  strongswan.x86_64 0:5.4.0-2.el7                                                                                                                                                             
+
+Complete!
+[root@server ~]# 
+```
+
+== Configure openswan on both client and server
+
+[root@server ~]# cat /etc/strongswan/ipsec.conf 
+config setup
+	charondebug="all"
+	uniqueids=yes
+	strictcrlpolicy=no
+
+conn %default
+conn tunnel
+	left=139.59.155.23
+	leftsubnet=10.1.0.0/16
+	right=138.68.106.147
+	rightsubnet=11.1.0.0/16
+	ike=aes256-sha2_256-modp1024!
+	esp=aes256-sha2_256!
+	keyingtries=0
+	ikelifetime=1h
+	lifetime=8h
+	dpddelay=30
+	dpdtimeout=120
+	dpdaction=clear
+	authby=secret
+	keyexchange=ikev2
+	auto=start
+	type=tunnel
+[root@server ~]# cat /etc/strongswan/ipsec.secrets 
+139.59.155.23 138.68.106.147 : PSK 'sharedsecret'
+[root@server ~]# 
+
+[root@client ~]# cat /etc/strongswan/ipsec.conf 
+config setup
+	charondebug="all"
+	uniqueids=yes
+	strictcrlpolicy=no
+
+conn %default
+conn tunnel
+	left=138.68.106.147
+	leftsubnet=11.1.0.0/16
+	right=139.59.155.23
+	rightsubnet=10.1.0.0/16
+	ike=aes256-sha2_256-modp1024!
+	esp=aes256-sha2_256!
+	keyingtries=0
+	ikelifetime=1h
+	lifetime=8h
+	dpddelay=30
+	dpdtimeout=120
+	dpdaction=clear
+	authby=secret
+	keyexchange=ikev2
+	auto=start
+	type=tunnel
+[root@client ~]# cat /etc/strongswan/ipsec.secrets 
+139.59.155.23 138.68.106.147 : PSK 'sharedsecret'
+[root@client ~]# 
+
+== Enable tunnel between the machines
+
+```
+[root@server ~]# systemctl start strongswan
+[root@server ~]# 
+
+[root@client ~]# systemctl start strongswan
+[root@client ~]# 
+```
+
+== Check if the tunnel is up
+
+```
+[root@client ~]# ip xfrm state
+[root@client ~]# systemctl start strongswan
+[root@client ~]# ip xfrm state
+src 139.59.155.23 dst 138.68.106.147
+	proto esp spi 0xce151e64 reqid 1 mode tunnel
+	replay-window 32 flag af-unspec
+	auth-trunc hmac(sha256) 0x696f257370540a91a236c6a85c6fe8893af25ff18999b4604db499f46084c8c8 128
+	enc cbc(aes) 0xc0859d5c50768fbdf22be3abfa039fca26b54b836f8f892a5eaf4c8f3e2ae30a
+src 138.68.106.147 dst 139.59.155.23
+	proto esp spi 0xcd4029fc reqid 1 mode tunnel
+	replay-window 32 flag af-unspec
+	auth-trunc hmac(sha256) 0x759a267b151dbc7e655125661db44f8f2e5a75ed13929d98386da8a94870e831 128
+	enc cbc(aes) 0x1bd9d21da19ff9191aca112280f128a181a012689270708b22df8c0dc9cad1bf
+[root@client ~]#
+```
